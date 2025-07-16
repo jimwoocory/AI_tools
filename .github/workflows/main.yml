@@ -30,9 +30,9 @@ jobs:
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install flake8 pytest pytest-cov
+          pip install flake8 pytest==7.4.0 pytest-cov  # 显式指定pytest版本
           if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
-          pip list --verbose  # 显示详细的依赖信息
+          pip list --verbose
       - name: Check Python environment
         run: |
           python --version
@@ -45,12 +45,17 @@ jobs:
       - name: Verify pytest installation
         run: |
           pytest --version
-          pytest --fixtures | head -n 20  # 显示前20个可用的fixtures
+          pytest --fixtures | head -n 20
+      - name: Debug pytest configuration
+        run: |
+          pytest --trace-config
+          pytest --collect-only -q
       - name: Test with pytest (step-by-step)
+        env:
+          PYTEST_ADDOPTS: "--verbose --capture=no"
         run: |
           echo "Running pytest with minimal configuration..."
-          pytest --version
-          pytest -q -x --maxfail=1  # 运行所有测试，遇到第一个失败就停止
+          pytest -q -x --maxfail=1
           echo "If we reached here, all tests passed. Now running with coverage..."
           pytest --cov=./ --cov-report=xml -vv --durations=0
       - name: Upload coverage to Codecov
