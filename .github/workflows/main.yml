@@ -60,6 +60,21 @@ jobs:
         run: |
           echo "Test files found:"
           find . -name "test_*.py" -o -name "*_test.py"
+          if [ -z "$(find . -name "test_*.py" -o -name "*_test.py")" ]; then
+            echo "WARNING: No test files found!"
+          else
+            echo "Test files exist. Proceeding..."
+          fi
+      - name: Check test file contents
+        run: |
+          if [ -n "$(find . -name "test_*.py" -o -name "*_test.py")" ]; then
+            echo "Test file contents:"
+            for file in $(find . -name "test_*.py" -o -name "*_test.py"); do
+              echo "--- $file ---"
+              cat $file
+              echo "-------------"
+            done
+          fi
       - name: Run minimal test suite
         run: |
           echo "Creating minimal test file..."
