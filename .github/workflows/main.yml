@@ -30,7 +30,7 @@ jobs:
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install flake8 pytest==7.4.0 pytest-cov  # 显式指定pytest版本
+          pip install flake8 pytest==7.4.0 pytest-cov
           if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
           pip list --verbose
       - name: Check Python environment
@@ -50,6 +50,22 @@ jobs:
         run: |
           pytest --trace-config
           pytest --collect-only -q
+      - name: Check project structure
+        run: |
+          echo "Project structure:"
+          tree -a
+          echo "Current directory:"
+          pwd
+      - name: Check for test files
+        run: |
+          echo "Test files found:"
+          find . -name "test_*.py" -o -name "*_test.py"
+      - name: Run minimal test suite
+        run: |
+          echo "Creating minimal test file..."
+          mkdir -p tests
+          echo "def test_sanity(): assert True" > tests/test_sanity.py
+          pytest tests/test_sanity.py -vv
       - name: Test with pytest (step-by-step)
         env:
           PYTEST_ADDOPTS: "--verbose --capture=no"
