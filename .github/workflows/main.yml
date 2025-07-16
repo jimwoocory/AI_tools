@@ -11,7 +11,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        python-version: ["3.10"]  # 暂时只测试一个版本，简化调试
+        python-version: ["3.10"]
       fail-fast: false
 
     steps:
@@ -32,16 +32,27 @@ jobs:
           python -m pip install --upgrade pip
           pip install flake8 pytest pytest-cov
           if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
-          pip list  # 显示所有已安装的包及其版本
+          pip list --verbose  # 显示详细的依赖信息
+      - name: Check Python environment
+        run: |
+          python --version
+          which python
+          python -c "import sys; print(sys.path)"
       - name: Lint with flake8
         run: |
           flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
           flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
-      - name: Test with pytest (with detailed output)
-        env:
-          PYTEST_ADDOPTS: "--durations=0 --verbose --capture=no"  # 禁用输出捕获，显示完整日志
+      - name: Verify pytest installation
         run: |
-          pytest --cov=./ --cov-report=xml -vv
+          pytest --version
+          pytest --fixtures | head -n 20  # 显示前20个可用的fixtures
+      - name: Test with pytest (step-by-step)
+        run: |
+          echo "Running pytest with minimal configuration..."
+          pytest --version
+          pytest -q -x --maxfail=1  # 运行所有测试，遇到第一个失败就停止
+          echo "If we reached here, all tests passed. Now running with coverage..."
+          pytest --cov=./ --cov-report=xml -vv --durations=0
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v3
         with:
