@@ -11,7 +11,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        python-version: ["3.10"]
+        python-version: ["3.8", "3.9", "3.10", "3.11"]
       fail-fast: false
 
     steps:
@@ -56,6 +56,22 @@ jobs:
           tree -a
           echo "Current directory:"
           pwd
+      - name: Check Python module search path
+        run: |
+          echo "Python module search path:"
+          python -c "import sys; print('\n'.join(sys.path))"
+      - name: Check pytest configuration files
+        run: |
+          echo "Pytest configuration files:"
+          find . -name "pytest.ini" -o -name "pyproject.toml" -o -name "tox.ini"
+          if [ -f "pytest.ini" ]; then
+            echo "pytest.ini contents:"
+            cat pytest.ini
+          fi
+          if [ -f "pyproject.toml" ]; then
+            echo "pyproject.toml contents:"
+            cat pyproject.toml
+          fi
       - name: Check for test files
         run: |
           echo "Test files found:"
@@ -74,6 +90,16 @@ jobs:
               cat $file
               echo "-------------"
             done
+          fi
+      - name: Attempt to run specific test file (if exists)
+        continue-on-error: true
+        run: |
+          if [ -n "$(find . -name "test_*.py" -o -name "*_test.py" | head -n 1)" ]; then
+            TEST_FILE=$(find . -name "test_*.py" -o -name "*_test.py" | head -n 1)
+            echo "Attempting to run specific test file: $TEST_FILE"
+            pytest $TEST_FILE -vv -s
+          else
+            echo "No test files found to run individually."
           fi
       - name: Run minimal test suite
         run: |
